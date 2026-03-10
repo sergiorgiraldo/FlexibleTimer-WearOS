@@ -21,3 +21,6 @@ gradle-app.setting
 .classpath
 
 .idea
+release
+*.jks
+*.keystore

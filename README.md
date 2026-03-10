@@ -48,3 +48,12 @@ Covers prerequisites (JDK 17, Android Studio, SDK), running unit tests, building
 `docs/DeployGuide.md` 
 
 Covers enabling Developer Options on the watch, Wi-Fi ADB install (no cable needed), USB cable fallback, verifying install, updating the app, and an ADB quick reference.
+
+### Signing the apk
+
+key is in password manager:
+to encode: 
+```base64 -i flexibletimer.jks```
+
+to decode:
+```base64 --decode > flexibletimer.jks
