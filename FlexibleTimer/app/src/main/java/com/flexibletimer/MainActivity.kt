@@ -25,14 +25,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             FlexibleTimerTheme {
-                FlexibleTimerApp()
+                FlexibleTimerNavHost()
             }
         }
     }
 }
 
 @Composable
-fun FlexibleTimerApp() {
+fun FlexibleTimerNavHost() {
     val navController = rememberSwipeDismissableNavController()
     val runState by TimerService.runState.collectAsStateWithLifecycle()
 
