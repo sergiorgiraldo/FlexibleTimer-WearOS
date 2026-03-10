@@ -20,7 +20,8 @@ The project is a standard Gradle/Android Studio project. Key files:
 * TimerService is a foreground service exposing a StateFlow<TimerRunState> as a process-wide singleton — the UI reacts to it from anywhere in the nav graph
 
 * Double-tap uses Compose detectTapGestures(onDoubleTap) on the running screens
-Vibration: 1 short pulse on start, 1 short pulse after each non-final sequential timer, 3 short pulses at the end
+  
+* Vibration: 1 short pulse on start, 1 short pulse after each non-final sequential timer, 3 short pulses at the end
 
 * Group layout: 2-column symmetric grid (works for 2, 3, and 4 timers)
 
