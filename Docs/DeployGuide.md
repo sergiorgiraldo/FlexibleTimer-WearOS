@@ -44,7 +44,12 @@ network.
 
 Open a terminal on your computer and run:
 
-> adb connect 192.168.1.42:5555
+> adb connect 192.168.1.42:5555 
+
+or
+
+> adb pair 192.168.1.42:5555 or
+
 
 Replace the IP with the one shown on your watch. You should see:
 

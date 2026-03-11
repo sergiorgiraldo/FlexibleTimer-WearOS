@@ -8,7 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
-import androidx.wear.compose.foundation.lazy.ScalingLazyListScope
 import androidx.wear.compose.material.*
 import com.flexibletimer.data.model.SavedSequence
 import com.flexibletimer.data.model.TimerEntry
@@ -59,11 +58,14 @@ fun GroupNewScreen(
         contentPadding = PaddingValues(vertical = 24.dp, horizontal = 8.dp),
         modifier = Modifier.fillMaxSize()
     ) {
+        // #4: title shows "Group", not generic "Timers"
+        item { Text("Group", modifier = Modifier.padding(bottom = 8.dp)) }
         item {
-            Stepper(value = uiState.timers.size, onValueChange = onTimerCountChange, range = 2..4, label = "Timers")
+            Stepper(value = uiState.timers.size, onValueChange = onTimerCountChange, range = 2..4, label = "Count")
         }
         uiState.timers.forEachIndexed { index, timer ->
             item {
+                // Reuse TimerEntryEditor from SequentialScreens (same package/internal)
                 TimerEntryEditor(
                     index = index, timer = timer,
                     onLabelChange = { onUpdateTimer(index, it, null) },

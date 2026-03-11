@@ -13,80 +13,42 @@ import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.Text
 import com.flexibletimer.data.model.TimerRunState
 import com.flexibletimer.ui.components.GroupTimerCell
-import com.flexibletimer.ui.components.toMmSs
-
-// ── Sequential running screen ────────────────────────────────────────────────
+import com.flexibletimer.ui.components.toHhMmSs
 
 @Composable
-fun RunningSequentialScreen(
-    state: TimerRunState.SequentialRunning,
-    onDoubleTap: () -> Unit
-) {
+fun RunningSequentialScreen(state: TimerRunState.SequentialRunning, onDoubleTap: () -> Unit) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTapGestures(onDoubleTap = { onDoubleTap() })
-            }
+        modifier = Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures(onDoubleTap = { onDoubleTap() }) }
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxSize()
         ) {
-            // Label on top
             Text(
                 text = state.label.ifBlank { "Timer ${state.currentIndex + 1}" },
-                fontSize = 14.sp,
-                textAlign = TextAlign.Center,
+                fontSize = 14.sp, textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
-
             Spacer(modifier = Modifier.height(4.dp))
-
-            // Duration centred and large
             Text(
-                text = state.remainingSeconds.toMmSs(),
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                text = state.remainingSeconds.toHhMmSs(),
+                fontSize = 30.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center
             )
-
             Spacer(modifier = Modifier.height(8.dp))
-
-            // Progress indicator
-            Text(
-                text = "${state.currentIndex + 1} / ${state.timers.size}",
-                fontSize = 11.sp,
-                textAlign = TextAlign.Center
-            )
-
+            Text(text = "${state.currentIndex + 1} / ${state.timers.size}", fontSize = 11.sp, textAlign = TextAlign.Center)
             Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "Double-tap to stop",
-                fontSize = 10.sp,
-                textAlign = TextAlign.Center
-            )
+            Text(text = "Double-tap to stop", fontSize = 10.sp, textAlign = TextAlign.Center)
         }
     }
 }
 
-// ── Group running screen ─────────────────────────────────────────────────────
-
 @Composable
-fun RunningGroupScreen(
-    state: TimerRunState.GroupRunning,
-    onDoubleTap: () -> Unit
-) {
+fun RunningGroupScreen(state: TimerRunState.GroupRunning, onDoubleTap: () -> Unit) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTapGestures(onDoubleTap = { onDoubleTap() })
-            }
+        modifier = Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures(onDoubleTap = { onDoubleTap() }) }
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -94,14 +56,9 @@ fun RunningGroupScreen(
             modifier = Modifier.fillMaxSize().padding(8.dp)
         ) {
             val timerCount = state.timers.size
-
-            // Symmetric grid layout: 2 per row
             val rows = (timerCount + 1) / 2
             for (row in 0 until rows) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
                     for (col in 0..1) {
                         val idx = row * 2 + col
                         if (idx < timerCount) {
@@ -111,37 +68,20 @@ fun RunningGroupScreen(
                                 modifier = Modifier.weight(1f)
                             )
                         } else {
-                            // Empty spacer to keep symmetry
                             Spacer(modifier = Modifier.weight(1f))
                         }
                     }
                 }
             }
-
             Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "Double-tap to stop",
-                fontSize = 10.sp,
-                textAlign = TextAlign.Center
-            )
+            Text(text = "Double-tap to stop", fontSize = 10.sp, textAlign = TextAlign.Center)
         }
     }
 }
 
-// ── Finished screen ───────────────────────────────────────────────────────────
-
 @Composable
 fun FinishedScreen() {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Text(
-            text = "Done! ✓",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+        Text(text = "Done! ✓", fontSize = 28.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
     }
 }
