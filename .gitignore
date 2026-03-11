@@ -24,3 +24,4 @@ gradle-app.setting
 release
 *.jks
 *.keystore
+local.properties
