@@ -55,5 +55,7 @@ key is in password manager:
 to encode: 
 ```base64 -i flexibletimer.jks```
 
+and store raw in Password Manager
+
 to decode:
-```base64 --decode > flexibletimer.jks
+```base64 --decode -i fromPwdMgr -o flexibletimer.jks
