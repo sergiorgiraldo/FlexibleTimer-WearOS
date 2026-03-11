@@ -79,6 +79,10 @@ class GroupViewModel @Inject constructor(
         }
     }
 
+    fun deleteGroup(sequence: SavedSequence) {
+        viewModelScope.launch { repository.delete(sequence) }
+    }
+
     fun clearError() = _uiState.update { it.copy(saveError = null) }
 
     fun startGroup(timers: List<TimerEntry>) {

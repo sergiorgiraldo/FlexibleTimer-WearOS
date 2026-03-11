@@ -76,6 +76,10 @@ class SequentialViewModel @Inject constructor(
         }
     }
 
+    fun deleteSequence(sequence: SavedSequence) {
+        viewModelScope.launch { repository.delete(sequence) }
+    }
+
     fun clearError() = _uiState.update { it.copy(saveError = null) }
 
     fun startSequential(timers: List<TimerEntry>) {

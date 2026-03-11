@@ -85,7 +85,7 @@ fun GroupNewScreen(
 // ── Group saved ───────────────────────────────────────────────────────────────
 
 @Composable
-fun GroupSavedScreen(groups: List<SavedSequence>, onSelect: (SavedSequence) -> Unit) {
+fun GroupSavedScreen(groups: List<SavedSequence>, onSelect: (SavedSequence) -> Unit, onDelete: (SavedSequence) -> Unit) {
     ScalingLazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         contentPadding = PaddingValues(vertical = 24.dp, horizontal = 8.dp),
@@ -94,7 +94,7 @@ fun GroupSavedScreen(groups: List<SavedSequence>, onSelect: (SavedSequence) -> U
         item { Text("Saved Groups", modifier = Modifier.padding(bottom = 8.dp)) }
         groups.forEach { group ->
             item {
-                SavedItemChip(name = group.name, onClick = { onSelect(group) }, modifier = Modifier.padding(vertical = 2.dp))
+                SavedItemChip(name = group.name, onClick = { onSelect(group) }, onDelete = { onDelete(group) }, modifier = Modifier.padding(vertical = 2.dp))
             }
         }
     }

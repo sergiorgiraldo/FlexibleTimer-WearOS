@@ -19,8 +19,25 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
 }
 
 @Composable
-fun SavedItemChip(name: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Chip(onClick = onClick, label = { Text(text = name, maxLines = 1) }, modifier = modifier.fillMaxWidth())
+fun SavedItemChip(name: String, onClick: () -> Unit, onDelete: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Chip(
+            onClick = onClick,
+            label = { Text(text = name, maxLines = 1) },
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(Modifier.width(4.dp))
+        Button(
+            onClick = onDelete,
+            modifier = Modifier.size(36.dp),
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF8B0000))
+        ) {
+            Text("✕", fontSize = 12.sp)
+        }
+    }
 }
 
 /** Formats seconds as HH:MM:SS */

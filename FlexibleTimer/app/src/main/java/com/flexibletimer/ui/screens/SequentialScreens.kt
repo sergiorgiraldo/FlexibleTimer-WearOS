@@ -89,7 +89,7 @@ fun SequentialNewScreen(
 // ── Sequential saved ──────────────────────────────────────────────────────────
 
 @Composable
-fun SequentialSavedScreen(sequences: List<SavedSequence>, onSelect: (SavedSequence) -> Unit) {
+fun SequentialSavedScreen(sequences: List<SavedSequence>, onSelect: (SavedSequence) -> Unit, onDelete: (SavedSequence) -> Unit) {
     ScalingLazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         contentPadding = PaddingValues(vertical = 24.dp, horizontal = 8.dp),
@@ -97,7 +97,7 @@ fun SequentialSavedScreen(sequences: List<SavedSequence>, onSelect: (SavedSequen
     ) {
         item { Text("Saved", modifier = Modifier.padding(bottom = 8.dp)) }
         sequences.forEach { seq ->
-            item { SavedItemChip(name = seq.name, onClick = { onSelect(seq) }, modifier = Modifier.padding(vertical = 2.dp)) }
+            item { SavedItemChip(name = seq.name, onClick = { onSelect(seq) }, onDelete = { onDelete(seq) }, modifier = Modifier.padding(vertical = 2.dp)) }
         }
     }
 }

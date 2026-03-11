@@ -142,7 +142,7 @@ class TimerService : Service() {
 
     private fun vibrateShort() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE))
+            vibrator.vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
             @Suppress("DEPRECATION")
             vibrator.vibrate(150)
@@ -150,7 +150,7 @@ class TimerService : Service() {
     }
 
     private fun vibrateTriple() {
-        val pattern = longArrayOf(0, 150, 100, 150, 100, 150)
+        val pattern = longArrayOf(0, 200, 100, 200, 100, 200)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
         } else {
