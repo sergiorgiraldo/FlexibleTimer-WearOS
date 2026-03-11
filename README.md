@@ -52,10 +52,13 @@ Covers enabling Developer Options on the watch, Wi-Fi ADB install (no cable need
 ### Signing the apk
 
 key is in password manager:
+
 to encode: 
+
 ```base64 -i flexibletimer.jks```
 
 and store raw in Password Manager
 
 to decode:
+
 ```base64 --decode -i fromPwdMgr -o flexibletimer.jks```
