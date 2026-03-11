@@ -58,4 +58,4 @@ to encode:
 and store raw in Password Manager
 
 to decode:
-```base64 --decode -i fromPwdMgr -o flexibletimer.jks
+```base64 --decode -i fromPwdMgr -o flexibletimer.jks```
