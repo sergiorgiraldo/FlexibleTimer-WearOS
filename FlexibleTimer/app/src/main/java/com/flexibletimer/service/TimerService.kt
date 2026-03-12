@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.core.app.NotificationCompat
@@ -25,16 +26,13 @@ class TimerService : Service() {
         const val CHANNEL_ID = "flexible_timer_channel"
         const val NOTIFICATION_ID = 1
 
-        // Intent actions
         const val ACTION_START_SEQUENTIAL = "START_SEQUENTIAL"
         const val ACTION_START_GROUP = "START_GROUP"
         const val ACTION_STOP = "STOP"
 
-        // Intent extras
         const val EXTRA_LABELS = "labels"
         const val EXTRA_DURATIONS = "durations"
 
-        // Shared observable state (process-wide singleton via companion)
         private val _runState = MutableStateFlow<TimerRunState>(TimerRunState.Idle)
         val runState: StateFlow<TimerRunState> = _runState.asStateFlow()
     }
@@ -42,7 +40,11 @@ class TimerService : Service() {
     @Inject
     lateinit var vibrator: Vibrator
 
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    // WakeLock keeps the CPU alive when the screen turns off
+    private var wakeLock: PowerManager.WakeLock? = null
+
+    // Use Dispatchers.IO — more resilient than Default under Wear OS background restrictions
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var timerJob: Job? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -56,28 +58,46 @@ class TimerService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START_SEQUENTIAL -> {
-                val labels = intent.getStringArrayListExtra(EXTRA_LABELS) ?: return START_NOT_STICKY
-                val durations = intent.getLongArrayExtra(EXTRA_DURATIONS) ?: return START_NOT_STICKY
+                val labels = intent.getStringArrayListExtra(EXTRA_LABELS) ?: return START_STICKY
+                val durations = intent.getLongArrayExtra(EXTRA_DURATIONS) ?: return START_STICKY
                 val timers = labels.zip(durations.toList()).map { (l, d) -> TimerEntry(l, d) }
                 startSequential(timers)
             }
             ACTION_START_GROUP -> {
-                val labels = intent.getStringArrayListExtra(EXTRA_LABELS) ?: return START_NOT_STICKY
-                val durations = intent.getLongArrayExtra(EXTRA_DURATIONS) ?: return START_NOT_STICKY
+                val labels = intent.getStringArrayListExtra(EXTRA_LABELS) ?: return START_STICKY
+                val durations = intent.getLongArrayExtra(EXTRA_DURATIONS) ?: return START_STICKY
                 val timers = labels.zip(durations.toList()).map { (l, d) -> TimerEntry(l, d) }
                 startGroup(timers)
             }
             ACTION_STOP -> stopTimers()
         }
-        return START_NOT_STICKY
+        // START_STICKY: if the OS kills the service, restart it with the last intent
+        return START_STICKY
+    }
+
+    // ── WakeLock ──────────────────────────────────────────────────────────────
+
+    private fun acquireWakeLock() {
+        val pm = getSystemService(PowerManager::class.java)
+        wakeLock?.release()
+        wakeLock = pm.newWakeLock(
+            PowerManager.PARTIAL_WAKE_LOCK,
+            "FlexibleTimer::TimerWakeLock"
+        ).also { it.acquire(12 * 60 * 60 * 1000L) } // max 12 hours
+    }
+
+    private fun releaseWakeLock() {
+        wakeLock?.let { if (it.isHeld) it.release() }
+        wakeLock = null
     }
 
     // ── Sequential ────────────────────────────────────────────────────────────
 
     private fun startSequential(timers: List<TimerEntry>) {
         timerJob?.cancel()
+        acquireWakeLock()
         timerJob = serviceScope.launch {
-            vibrateShort()   // start signal
+            vibrateShort()
             for ((index, timer) in timers.withIndex()) {
                 var remaining = timer.durationSeconds
                 while (remaining > 0) {
@@ -91,14 +111,15 @@ class TimerService : Service() {
                     remaining--
                 }
                 if (index < timers.lastIndex) {
-                    vibrateShort()   // timer finished (not last)
+                    vibrateShort()
                 } else {
-                    vibrateTriple()  // last timer finished
+                    vibrateTriple()
                 }
             }
             _runState.value = TimerRunState.Finished
             delay(2_000)
             _runState.value = TimerRunState.Idle
+            releaseWakeLock()
             stopSelf()
         }
     }
@@ -107,8 +128,9 @@ class TimerService : Service() {
 
     private fun startGroup(timers: List<TimerEntry>) {
         timerJob?.cancel()
+        acquireWakeLock()
         timerJob = serviceScope.launch {
-            vibrateShort()  // start signal
+            vibrateShort()
             val remaining = timers.map { it.durationSeconds }.toLongArray()
 
             while (remaining.any { it > 0 }) {
@@ -125,6 +147,7 @@ class TimerService : Service() {
             _runState.value = TimerRunState.Finished
             delay(2_000)
             _runState.value = TimerRunState.Idle
+            releaseWakeLock()
             stopSelf()
         }
     }
@@ -134,15 +157,16 @@ class TimerService : Service() {
     fun stopTimers() {
         timerJob?.cancel()
         timerJob = null
+        releaseWakeLock()
         _runState.value = TimerRunState.Idle
         stopSelf()
     }
 
-    // ── Vibration helpers ─────────────────────────────────────────────────────
+    // ── Vibration ─────────────────────────────────────────────────────────────
 
     private fun vibrateShort() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE))
+            vibrator.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
             @Suppress("DEPRECATION")
             vibrator.vibrate(150)
@@ -150,7 +174,7 @@ class TimerService : Service() {
     }
 
     private fun vibrateTriple() {
-        val pattern = longArrayOf(0, 200, 100, 200, 100, 200)
+        val pattern = longArrayOf(0, 150, 100, 150, 100, 150)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
         } else {
@@ -163,9 +187,7 @@ class TimerService : Service() {
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
-            CHANNEL_ID,
-            "Flexible Timer",
-            NotificationManager.IMPORTANCE_LOW
+            CHANNEL_ID, "Flexible Timer", NotificationManager.IMPORTANCE_LOW
         )
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
@@ -179,6 +201,7 @@ class TimerService : Service() {
             .build()
 
     override fun onDestroy() {
+        releaseWakeLock()
         serviceScope.cancel()
         super.onDestroy()
     }

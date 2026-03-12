@@ -63,7 +63,6 @@ fun SequentialNewScreen(
         contentPadding = PaddingValues(vertical = 24.dp, horizontal = 8.dp),
         modifier = Modifier.fillMaxSize()
     ) {
-        // #4: title shows mode name, not generic "Timers"
         item { Text("Sequential", modifier = Modifier.padding(bottom = 8.dp)) }
         item {
             Stepper(value = uiState.timers.size, onValueChange = onTimerCountChange, range = 1..10, label = "Count")
@@ -89,7 +88,11 @@ fun SequentialNewScreen(
 // ── Sequential saved ──────────────────────────────────────────────────────────
 
 @Composable
-fun SequentialSavedScreen(sequences: List<SavedSequence>, onSelect: (SavedSequence) -> Unit, onDelete: (SavedSequence) -> Unit) {
+fun SequentialSavedScreen(
+    sequences: List<SavedSequence>,
+    onSelect: (SavedSequence) -> Unit,
+    onDelete: (SavedSequence) -> Unit
+) {
     ScalingLazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         contentPadding = PaddingValues(vertical = 24.dp, horizontal = 8.dp),
@@ -131,42 +134,112 @@ internal fun TimerEntryEditor(
     onLabelChange: (String) -> Unit,
     onDurationChange: (Long) -> Unit
 ) {
-    // Convert stored seconds → HH:MM:SS for display/editing
-    var hhMmSsText by remember(timer.durationSeconds) {
-        mutableStateOf(secondsToHhMmSs(timer.durationSeconds))
-    }
-
-    // #2: center the whole editor card
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
     ) {
         Text("Timer ${index + 1}", style = MaterialTheme.typography.caption2, textAlign = TextAlign.Center)
         Spacer(Modifier.height(4.dp))
-        // #3: each field wrapped in SwipeDismissableBox substitute — use a
-        //     non-swipeable container so the outer swipe-to-go-back still works.
-        //     BasicTextField consumes horizontal drag; we limit its width so
-        //     edges remain free for the system swipe gesture.
-        WearTextField(
-            value = timer.label,
-            onValueChange = onLabelChange,
-            placeholder = "Label"
-        )
+        WearTextField(value = timer.label, onValueChange = onLabelChange, placeholder = "Label")
         Spacer(Modifier.height(4.dp))
-        WearTextField(
-            value = hhMmSsText,
-            onValueChange = { raw ->
-                hhMmSsText = raw
-                hhMmSsToSeconds(raw)?.let { onDurationChange(it) }
-            },
-            placeholder = "HH:MM:SS",
-            keyboardType = KeyboardType.Number
+        // Calculator-style time input — always valid HH:MM:SS
+        TimeInput(
+            durationSeconds = timer.durationSeconds,
+            onDurationChange = onDurationChange
         )
     }
 }
 
+// ── Calculator-style time input ───────────────────────────────────────────────
+//
+// Stores 6 digits (HHMMSS). Each new digit shifts in from the right:
+//   Start:  [0,0,0,0,0,0] → "00:00:00"
+//   Press 1:[0,0,0,0,0,1] → "00:00:01"
+//   Press 2:[0,0,0,0,1,2] → "00:00:12"
+//   Press 3:[0,0,0,1,2,3] → "00:01:23"
+// Backspace shifts right, dropping the last digit.
+
+@Composable
+internal fun TimeInput(durationSeconds: Long, onDurationChange: (Long) -> Unit) {
+    // Decompose stored seconds into 6 digits [H1,H2,M1,M2,S1,S2]
+    var digits by remember(durationSeconds) {
+        val h = (durationSeconds / 3600).coerceAtMost(99)
+        val m = ((durationSeconds % 3600) / 60).coerceAtMost(59)
+        val s = (durationSeconds % 60).coerceAtMost(59)
+        mutableStateOf(
+            intArrayOf(
+                (h / 10).toInt(), (h % 10).toInt(),
+                (m / 10).toInt(), (m % 10).toInt(),
+                (s / 10).toInt(), (s % 10).toInt()
+            )
+        )
+    }
+
+    fun formatted() = "%d%d:%d%d:%d%d".format(
+        digits[0], digits[1], digits[2], digits[3], digits[4], digits[5]
+    )
+
+    fun pushDigit(d: Int) {
+        val new = intArrayOf(digits[1], digits[2], digits[3], digits[4], digits[5], d)
+        digits = new
+        val h = new[0] * 10 + new[1]
+        val m = new[2] * 10 + new[3]
+        val s = new[4] * 10 + new[5]
+        onDurationChange(h * 3600L + m * 60L + s)
+    }
+
+    fun backspace() {
+        val new = intArrayOf(0, digits[0], digits[1], digits[2], digits[3], digits[4])
+        digits = new
+        val h = new[0] * 10 + new[1]
+        val m = new[2] * 10 + new[3]
+        val s = new[4] * 10 + new[5]
+        onDurationChange(h * 3600L + m * 60L + s)
+    }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        // Display
+        Text(
+            text = formatted(),
+            fontSize = 20.sp,
+            color = Color.White,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
+
+        // Digit rows: 1-2-3 / 4-5-6 / 7-8-9 / ⌫-0
+        val rows = listOf(
+            listOf(1, 2, 3),
+            listOf(4, 5, 6),
+            listOf(7, 8, 9)
+        )
+        rows.forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                row.forEach { digit ->
+                    Button(
+                        onClick = { pushDigit(digit) },
+                        modifier = Modifier.size(36.dp)
+                    ) { Text(digit.toString(), fontSize = 13.sp) }
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+        }
+        // Bottom row: backspace and 0
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Button(
+                onClick = { backspace() },
+                modifier = Modifier.size(36.dp),
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF444444))
+            ) { Text("⌫", fontSize = 13.sp) }
+            Button(
+                onClick = { pushDigit(0) },
+                modifier = Modifier.size(36.dp)
+            ) { Text("0", fontSize = 13.sp) }
+        }
+    }
+}
+
 // ── WearTextField ─────────────────────────────────────────────────────────────
-// #3: width capped at 75% so left/right edges stay free for swipe-to-dismiss
 
 @Composable
 internal fun WearTextField(
@@ -175,9 +248,7 @@ internal fun WearTextField(
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .fillMaxWidth(0.75f)   // leave edges free for swipe-dismiss
-            .padding(2.dp)
+        modifier = Modifier.fillMaxWidth(0.75f).padding(2.dp)
     ) {
         if (value.isEmpty()) {
             Text(text = placeholder, color = Color.Gray, fontSize = 13.sp, textAlign = TextAlign.Center)
@@ -199,24 +270,4 @@ internal fun secondsToHhMmSs(total: Long): String {
     val m = (total % 3600) / 60
     val s = total % 60
     return "%02d:%02d:%02d".format(h, m, s)
-}
-
-/** Accepts "HH:MM:SS", "MM:SS", or plain seconds. Returns null if unparseable. */
-internal fun hhMmSsToSeconds(input: String): Long? {
-    val parts = input.trim().split(":")
-    return when (parts.size) {
-        3 -> {
-            val h = parts[0].toLongOrNull() ?: return null
-            val m = parts[1].toLongOrNull() ?: return null
-            val s = parts[2].toLongOrNull() ?: return null
-            h * 3600 + m * 60 + s
-        }
-        2 -> {
-            val m = parts[0].toLongOrNull() ?: return null
-            val s = parts[1].toLongOrNull() ?: return null
-            m * 60 + s
-        }
-        1 -> parts[0].toLongOrNull()
-        else -> null
-    }
 }
