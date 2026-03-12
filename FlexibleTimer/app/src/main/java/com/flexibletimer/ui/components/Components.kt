@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.*
@@ -48,11 +49,25 @@ fun Long.toHhMmSs(): String {
     return "%02d:%02d:%02d".format(h, m, s)
 }
 
+val timerColors = listOf(
+    Color(0xFF4FC3F7), // light blue
+    Color(0xFFA5D6A7), // light green
+    Color(0xFFFFCC80), // light orange
+    Color(0xFFCE93D8), // light purple
+)
+
 @Composable
-fun GroupTimerCell(label: String, remainingSeconds: Long, modifier: Modifier = Modifier) {
+fun GroupTimerCell(
+    label: String,
+    remainingSeconds: Long,
+    color: Color = Color.White,
+    modifier: Modifier = Modifier,
+    labelFontSize: TextUnit = 13.sp,
+    timeFontSize: TextUnit = 22.sp,
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.padding(4.dp)) {
-        Text(text = label.ifBlank { "Timer" }, fontSize = 10.sp, maxLines = 1)
-        Text(text = remainingSeconds.toHhMmSs(), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Text(text = label.ifBlank { "Timer" }, fontSize = labelFontSize, maxLines = 1, color = color)
+        Text(text = remainingSeconds.toHhMmSs(), fontSize = timeFontSize, fontWeight = FontWeight.Bold, color = color)
     }
 }
 
