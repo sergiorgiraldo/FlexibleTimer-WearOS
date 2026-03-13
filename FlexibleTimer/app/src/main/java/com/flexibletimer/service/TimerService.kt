@@ -3,6 +3,7 @@ package com.flexibletimer.service
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
@@ -10,6 +11,7 @@ import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.core.app.NotificationCompat
+import com.flexibletimer.MainActivity
 import com.flexibletimer.data.model.TimerEntry
 import com.flexibletimer.data.model.TimerRunState
 import dagger.hilt.android.AndroidEntryPoint
@@ -40,6 +42,8 @@ class TimerService : Service() {
     @Inject
     lateinit var vibrator: Vibrator
 
+    private lateinit var notificationManager: NotificationManager
+
     // WakeLock keeps the CPU alive when the screen turns off
     private var wakeLock: PowerManager.WakeLock? = null
 
@@ -51,6 +55,7 @@ class TimerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        notificationManager = getSystemService(NotificationManager::class.java)
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification("Flexible Timer running"))
     }
@@ -100,12 +105,17 @@ class TimerService : Service() {
             vibrateShort()
             for ((index, timer) in timers.withIndex()) {
                 var remaining = timer.durationSeconds
+                val name = timer.label.ifBlank { "Timer ${index + 1}" }
                 while (remaining > 0) {
                     _runState.value = TimerRunState.SequentialRunning(
                         timers = timers,
                         currentIndex = index,
                         remainingSeconds = remaining,
                         label = timer.label
+                    )
+                    notificationManager.notify(
+                        NOTIFICATION_ID,
+                        buildNotification("$name — ${remaining.toNotifTime()}")
                     )
                     delay(1_000)
                     remaining--
@@ -117,6 +127,7 @@ class TimerService : Service() {
                 }
             }
             _runState.value = TimerRunState.Finished
+            notificationManager.notify(NOTIFICATION_ID, buildNotification("Done!"))
             delay(2_000)
             _runState.value = TimerRunState.Idle
             releaseWakeLock()
@@ -138,6 +149,10 @@ class TimerService : Service() {
                     timers = timers,
                     remainingSeconds = remaining.toList()
                 )
+                val notifText = remaining.mapIndexed { i, s ->
+                    "${timers[i].label.ifBlank { "T${i + 1}" }} ${s.toNotifTime()}"
+                }.joinToString("  ")
+                notificationManager.notify(NOTIFICATION_ID, buildNotification(notifText))
                 delay(1_000)
                 for (i in remaining.indices) {
                     if (remaining[i] > 0) remaining[i]--
@@ -145,6 +160,7 @@ class TimerService : Service() {
             }
             vibrateTriple()
             _runState.value = TimerRunState.Finished
+            notificationManager.notify(NOTIFICATION_ID, buildNotification("Done!"))
             delay(2_000)
             _runState.value = TimerRunState.Idle
             releaseWakeLock()
@@ -192,13 +208,30 @@ class TimerService : Service() {
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
-    private fun buildNotification(text: String): Notification =
-        NotificationCompat.Builder(this, CHANNEL_ID)
+    private fun buildNotification(text: String): Notification {
+        val tapIntent = PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Flexible Timer")
             .setContentText(text)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setOngoing(true)
+            .setContentIntent(tapIntent)
             .build()
+    }
+
+    /** Formats seconds as MM:SS (no hours prefix to keep notification compact). */
+    private fun Long.toNotifTime(): String {
+        val m = this / 60
+        val s = this % 60
+        return "%02d:%02d".format(m, s)
+    }
 
     override fun onDestroy() {
         releaseWakeLock()
