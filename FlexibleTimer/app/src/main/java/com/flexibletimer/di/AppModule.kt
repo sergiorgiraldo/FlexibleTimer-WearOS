@@ -1,7 +1,9 @@
 package com.flexibletimer.di
 
 import android.content.Context
+import android.os.Build
 import android.os.Vibrator
+import android.os.VibratorManager
 import androidx.room.Room
 import com.flexibletimer.data.repository.AppDatabase
 import com.flexibletimer.data.repository.SavedSequenceDao
@@ -32,7 +34,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideVibrator(@ApplicationContext ctx: Context): Vibrator =
-        ctx.getSystemService(Vibrator::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ctx.getSystemService(VibratorManager::class.java).defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            ctx.getSystemService(Vibrator::class.java)
+        }
 }
 
 @Module
