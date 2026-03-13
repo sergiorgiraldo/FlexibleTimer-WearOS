@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.Text
 import com.flexibletimer.data.model.TimerRunState
 import com.flexibletimer.ui.components.GroupTimerCell
+import com.flexibletimer.ui.components.timerColors
 import com.flexibletimer.ui.components.toHhMmSs
 
 @Composable
@@ -48,33 +49,115 @@ fun RunningSequentialScreen(state: TimerRunState.SequentialRunning, onDoubleTap:
 fun RunningGroupScreen(state: TimerRunState.GroupRunning, onDoubleTap: () -> Unit) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures(onDoubleTap = { onDoubleTap() }) }
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) { detectTapGestures(onDoubleTap = { onDoubleTap() }) }
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize().padding(8.dp)
+        when (state.timers.size) {
+            1 -> GroupLayout1(state)
+            2 -> GroupLayout2(state)
+            3 -> GroupLayout3(state)
+            else -> GroupLayout4(state)
+        }
+        Text(
+            text = "Double-tap to stop",
+            fontSize = 10.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp)
+        )
+    }
+}
+
+@Composable
+private fun GroupLayout1(state: TimerRunState.GroupRunning) {
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+        GroupTimerCell(
+            label = state.timers[0].label.ifBlank { "T1" },
+            remainingSeconds = state.remainingSeconds[0],
+            color = timerColors[0],
+            labelFontSize = 18.sp,
+            timeFontSize = 36.sp,
+        )
+    }
+}
+
+@Composable
+private fun GroupLayout2(state: TimerRunState.GroupRunning) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 16.dp)
+    ) {
+        repeat(2) { idx ->
+            GroupTimerCell(
+                label = state.timers[idx].label.ifBlank { "T${idx + 1}" },
+                remainingSeconds = state.remainingSeconds[idx],
+                color = timerColors[idx],
+                labelFontSize = 15.sp,
+                timeFontSize = 26.sp,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun GroupLayout3(state: TimerRunState.GroupRunning) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 12.dp)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier.fillMaxWidth().weight(1f)
         ) {
-            val timerCount = state.timers.size
-            val rows = (timerCount + 1) / 2
-            for (row in 0 until rows) {
-                Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
-                    for (col in 0..1) {
-                        val idx = row * 2 + col
-                        if (idx < timerCount) {
-                            GroupTimerCell(
-                                label = state.timers[idx].label.ifBlank { "T${idx + 1}" },
-                                remainingSeconds = state.remainingSeconds[idx],
-                                modifier = Modifier.weight(1f)
-                            )
-                        } else {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
-                    }
+            repeat(2) { idx ->
+                GroupTimerCell(
+                    label = state.timers[idx].label.ifBlank { "T${idx + 1}" },
+                    remainingSeconds = state.remainingSeconds[idx],
+                    color = timerColors[idx],
+                    labelFontSize = 13.sp,
+                    timeFontSize = 20.sp,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        GroupTimerCell(
+            label = state.timers[2].label.ifBlank { "T3" },
+            remainingSeconds = state.remainingSeconds[2],
+            color = timerColors[2],
+            labelFontSize = 13.sp,
+            timeFontSize = 20.sp,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun GroupLayout4(state: TimerRunState.GroupRunning) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 12.dp)
+    ) {
+        repeat(2) { row ->
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier.fillMaxWidth().weight(1f)
+            ) {
+                repeat(2) { col ->
+                    val idx = row * 2 + col
+                    GroupTimerCell(
+                        label = state.timers[idx].label.ifBlank { "T${idx + 1}" },
+                        remainingSeconds = state.remainingSeconds[idx],
+                        color = timerColors[idx],
+                        labelFontSize = 11.sp,
+                        timeFontSize = 18.sp,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "Double-tap to stop", fontSize = 10.sp, textAlign = TextAlign.Center)
         }
     }
 }
