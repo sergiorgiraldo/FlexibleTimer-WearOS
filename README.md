@@ -8,6 +8,8 @@ Sequential mode: you can setup several timers which will run in sequence. Use it
 
 Group mode: you can setup several timers which will run in parallel. Use it to track a set of dishes in your kitcken, to follow several colleagues doing exercises at the same time, etc
 
+* Sets can be saved for later reuse
+
 ## Project
 
 ### Structure
@@ -33,7 +35,7 @@ The project is a standard Gradle/Android Studio project. Key files:
   
 * Vibration: 1 short pulse on start, 1 short pulse after each non-final sequential timer, 3 short pulses at the end
 
-* Group layout: 2-column symmetric grid (works for 2, 3, and 4 timers)
+* Group layout: 2-column symmetric grid for 4 timers, stacked for 2 or 3 timers
 
 * Persistence: Room + Hilt DI; "Saved" button is conditionally shown only when items exist
 
