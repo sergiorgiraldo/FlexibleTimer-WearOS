@@ -154,8 +154,15 @@ class TimerService : Service() {
                 }.joinToString("  ")
                 notificationManager.notify(NOTIFICATION_ID, buildNotification(notifText))
                 delay(1_000)
+                // Remember which timers are about to finish this tick
+                val aboutToFinish = remaining.indices.filter { remaining[it] == 1L }
                 for (i in remaining.indices) {
                     if (remaining[i] > 0) remaining[i]--
+                }
+                // Vibrate for each timer that just hit zero, if others are still running
+                val anyStillRunning = remaining.any { it > 0 }
+                if (anyStillRunning && aboutToFinish.isNotEmpty()) {
+                    vibrateShort()
                 }
             }
             vibrateTriple()
