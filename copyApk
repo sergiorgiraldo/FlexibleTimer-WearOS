@@ -1,0 +1,3 @@
+#!/bin/sh
+
+mv ~/source/FlexibleTimer-WearOS/FlexibleTimer/app/release/app-release.apk ~/source/FlexibleTimer-WearOS/FlexibleTimer.apk
