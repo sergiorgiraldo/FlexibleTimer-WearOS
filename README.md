@@ -33,7 +33,7 @@ The project is a standard Gradle/Android Studio project. Key files:
 
 * Double-tap uses Compose detectTapGestures(onDoubleTap) on the running screens
   
-* Vibration: 1 short pulse on start, 1 short pulse after each non-final sequential timer, 3 short pulses at the end
+* Vibration: 3 long pulse on start, 2 long pulse after each non-final sequential timer, 3 long pulses at the end
 
 * Group layout: 2-column symmetric grid for 4 timers, stacked for 2 or 3 timers
 
