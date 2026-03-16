@@ -8,6 +8,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.os.PowerManager
+import android.os.SystemClock
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.core.app.NotificationCompat
@@ -103,10 +104,17 @@ class TimerService : Service() {
         acquireWakeLock()
         timerJob = serviceScope.launch {
             vibrateShort()
+            // Track end time per segment using the real clock so that extended
+            // delays caused by Wear OS power management don't lose time.
+            var segmentEnd = SystemClock.elapsedRealtime()
             for ((index, timer) in timers.withIndex()) {
-                var remaining = timer.durationSeconds
+                segmentEnd += timer.durationSeconds * 1000L
                 val name = timer.label.ifBlank { "Timer ${index + 1}" }
-                while (remaining > 0) {
+                while (true) {
+                    val now = SystemClock.elapsedRealtime()
+                    val msLeft = segmentEnd - now
+                    if (msLeft <= 0) break
+                    val remaining = (msLeft + 999) / 1000   // ceiling seconds
                     _runState.value = TimerRunState.SequentialRunning(
                         timers = timers,
                         currentIndex = index,
@@ -117,8 +125,7 @@ class TimerService : Service() {
                         NOTIFICATION_ID,
                         buildNotification("$name — ${remaining.toNotifTime()}")
                     )
-                    delay(1_000)
-                    remaining--
+                    delay(msLeft.coerceAtMost(1_000))
                 }
                 if (index < timers.lastIndex) {
                     vibrateShort()
@@ -142,9 +149,18 @@ class TimerService : Service() {
         acquireWakeLock()
         timerJob = serviceScope.launch {
             vibrateShort()
-            val remaining = timers.map { it.durationSeconds }.toLongArray()
+            // Absolute end time for each slot so real-clock skew doesn't lose time.
+            val startMs = SystemClock.elapsedRealtime()
+            val endTimes = LongArray(timers.size) { i -> startMs + timers[i].durationSeconds * 1000L }
+            val finishVibrated = BooleanArray(timers.size) { false }
 
-            while (remaining.any { it > 0 }) {
+            while (true) {
+                val now = SystemClock.elapsedRealtime()
+                val remaining = LongArray(timers.size) { i ->
+                    ((endTimes[i] - now + 999) / 1000).coerceAtLeast(0)
+                }
+                if (remaining.all { it == 0L }) break
+
                 _runState.value = TimerRunState.GroupRunning(
                     timers = timers,
                     remainingSeconds = remaining.toList()
@@ -153,17 +169,17 @@ class TimerService : Service() {
                     "${timers[i].label.ifBlank { "T${i + 1}" }} ${s.toNotifTime()}"
                 }.joinToString("  ")
                 notificationManager.notify(NOTIFICATION_ID, buildNotification(notifText))
-                delay(1_000)
-                // Remember which timers are about to finish this tick
-                val aboutToFinish = remaining.indices.filter { remaining[it] == 1L }
-                for (i in remaining.indices) {
-                    if (remaining[i] > 0) remaining[i]--
-                }
-                // Vibrate for each timer that just hit zero, if others are still running
+
+                // Vibrate for each timer that just finished, if others are still running
                 val anyStillRunning = remaining.any { it > 0 }
-                if (anyStillRunning && aboutToFinish.isNotEmpty()) {
-                    vibrateShort()
+                for (i in timers.indices) {
+                    if (!finishVibrated[i] && remaining[i] == 0L && anyStillRunning) {
+                        finishVibrated[i] = true
+                        vibrateShort()
+                    }
                 }
+
+                delay(1_000)
             }
             vibrateTriple()
             _runState.value = TimerRunState.Finished
