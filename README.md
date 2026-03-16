@@ -10,6 +10,10 @@ Group mode: you can setup several timers which will run in parallel. Use it to t
 
 * Sets can be saved for later reuse
 
+## Screenshots
+
+[i1.jpg]
+
 ## Project
 
 ### Structure
