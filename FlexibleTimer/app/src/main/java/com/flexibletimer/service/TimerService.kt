@@ -128,7 +128,10 @@ class TimerService : Service() {
                     delay(msLeft.coerceAtMost(1_000))
                 }
                 if (index < timers.lastIndex) {
-                    vibrateShort()
+                    vibrateIntermediate()
+                    // Re-acquire the wake lock so the OS doesn't treat the
+                    // vibration event as the end of active work and sleep the CPU.
+                    acquireWakeLock()
                 } else {
                     vibrateTriple()
                 }
@@ -175,7 +178,7 @@ class TimerService : Service() {
                 for (i in timers.indices) {
                     if (!finishVibrated[i] && remaining[i] == 0L && anyStillRunning) {
                         finishVibrated[i] = true
-                        vibrateShort()
+                        vibrateIntermediate()
                     }
                 }
 
@@ -209,6 +212,16 @@ class TimerService : Service() {
         } else {
             @Suppress("DEPRECATION")
             vibrator.vibrate(150)
+        }
+    }
+
+    /** Stronger pulse used between sequential timers and for individual group-timer completions. */
+    private fun vibrateIntermediate() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(350, 255))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(350)
         }
     }
 
