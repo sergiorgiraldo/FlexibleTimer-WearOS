@@ -12,7 +12,11 @@ Group mode: you can setup several timers which will run in parallel. Use it to t
 
 ## Screenshots
 
-[i1.jpg]
+<img src="https://raw.githubusercontent.com/sergiorgiraldo/FlexibleTimer-WearOS/refs/heads/main/Docs/i1.jpeg" width="200" /> <img src="https://raw.githubusercontent.com/sergiorgiraldo/FlexibleTimer-WearOS/refs/heads/main/Docs/i2.jpeg" width="200" /> <img src="https://raw.githubusercontent.com/sergiorgiraldo/FlexibleTimer-WearOS/refs/heads/main/Docs/i3.jpeg" width="200" /> 
+
+<img src="https://raw.githubusercontent.com/sergiorgiraldo/FlexibleTimer-WearOS/refs/heads/main/Docs/i4.jpeg" width="200" /> <img src="https://raw.githubusercontent.com/sergiorgiraldo/FlexibleTimer-WearOS/refs/heads/main/Docs/i5.jpeg" width="200" /> <img src="https://raw.githubusercontent.com/sergiorgiraldo/FlexibleTimer-WearOS/refs/heads/main/Docs/i6.jpeg" width="200" />
+
+<img src="https://raw.githubusercontent.com/sergiorgiraldo/FlexibleTimer-WearOS/refs/heads/main/Docs/i7.jpeg" width="200" />
 
 ## Project
 
