@@ -291,11 +291,13 @@ class TimerService : Service() {
     // ── Vibration ─────────────────────────────────────────────────────────────
 
     private fun vibrateShort() {
+        // 3 long loud pulses — start signal
+        val pattern = longArrayOf(0, 500, 150, 500, 150, 500)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE))
+            vibrator.vibrate(VibrationEffect.createWaveform(pattern, intArrayOf(0, 255, 0, 255, 0, 255), -1))
         } else {
             @Suppress("DEPRECATION")
-            vibrator.vibrate(150)
+            vibrator.vibrate(pattern, -1)
         }
     }
 
