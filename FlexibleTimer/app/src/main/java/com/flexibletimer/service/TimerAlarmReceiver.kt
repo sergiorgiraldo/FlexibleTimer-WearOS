@@ -1,5 +1,7 @@
 package com.flexibletimer.service
 
+import android.Manifest
+import android.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
@@ -9,12 +11,14 @@ import android.os.Build
 import android.os.SystemClock
 import android.os.VibrationEffect
 import android.os.Vibrator
+import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import com.flexibletimer.R
+import androidx.core.app.NotificationManagerCompat
 import com.flexibletimer.data.model.TimerEntry
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import androidx.core.app.ActivityCompat
 
 /**
  * Receives AlarmManager alarms for timer segment/slot completions.
@@ -108,6 +112,7 @@ class TimerAlarmReceiver : BroadcastReceiver() {
 
     // ── Notifications ─────────────────────────────────────────────────────────
 
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private fun sendTimerAlert(context: Context, label: String) {
         val nm = context.getSystemService(NotificationManager::class.java) ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
@@ -118,12 +123,13 @@ class TimerAlarmReceiver : BroadcastReceiver() {
             )
         }
         val notification = NotificationCompat.Builder(context, ALERT_CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+            .setSmallIcon(R.drawable.ic_lock_idle_alarm)
             .setContentTitle(label)
             .setContentText("$label finished")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
+        NotificationManagerCompat.from(context).notify(ALERT_NOTIFICATION_ID, notification)
         nm.notify(ALERT_NOTIFICATION_ID, notification)
     }
 

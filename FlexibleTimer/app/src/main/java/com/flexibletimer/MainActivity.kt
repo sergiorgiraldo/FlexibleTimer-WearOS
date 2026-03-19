@@ -20,6 +20,8 @@ import com.flexibletimer.ui.theme.FlexibleTimerTheme
 import dagger.hilt.android.AndroidEntryPoint
 import android.app.NotificationManager
 import android.app.NotificationChannel
+import android.content.pm.PackageManager
+import android.os.Build
 import com.flexibletimer.service.TimerAlarmReceiver.Companion.ALERT_CHANNEL_ID
 
 @AndroidEntryPoint
@@ -33,7 +35,6 @@ class MainActivity : ComponentActivity() {
             NotificationManager.IMPORTANCE_HIGH
         )
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-
 
         setContent {
             FlexibleTimerTheme {
