@@ -86,7 +86,7 @@ private fun GroupLayout2(state: TimerRunState.GroupRunning) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly,
-        modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, top = 24.dp, bottom = 16.dp)
+        modifier = Modifier.fillMaxSize().padding(start = 8.dp, top = 24.dp, end = 8.dp, bottom = 16.dp)
     ) {
         repeat(2) { idx ->
             GroupTimerCell(
@@ -106,7 +106,7 @@ private fun GroupLayout3(state: TimerRunState.GroupRunning) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly,
-        modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, top = 22.dp, bottom = 12.dp)
+        modifier = Modifier.fillMaxSize().padding(start = 8.dp, top = 22.dp, end = 8.dp, bottom = 12.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -139,7 +139,8 @@ private fun GroupLayout4(state: TimerRunState.GroupRunning) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly,
-        modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, top = 22.dp, bottom = 12.dp)
+        modifier = Modifier.fillMaxSize().padding(start = 8.dp, top = 22.dp, end = 8.dp, bottom = 12.dp)
+
     ) {
         repeat(2) { row ->
             Row(

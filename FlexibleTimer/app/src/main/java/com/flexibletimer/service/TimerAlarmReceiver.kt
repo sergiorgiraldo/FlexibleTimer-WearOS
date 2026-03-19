@@ -32,7 +32,7 @@ class TimerAlarmReceiver : BroadcastReceiver() {
         const val EXTRA_SLOT_INDEX     = "slot_index"
         const val EXTRA_END_TIMES      = "end_times"
 
-        private const val ALERT_CHANNEL_ID = "timer_alert_channel"
+        internal const val ALERT_CHANNEL_ID = "timer_alert_channel"
         private const val ALERT_NOTIFICATION_ID = 2
     }
 
@@ -118,7 +118,7 @@ class TimerAlarmReceiver : BroadcastReceiver() {
             )
         }
         val notification = NotificationCompat.Builder(context, ALERT_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentTitle(label)
             .setContentText("$label finished")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
