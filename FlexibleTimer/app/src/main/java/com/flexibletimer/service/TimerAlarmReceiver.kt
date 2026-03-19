@@ -1,5 +1,7 @@
 package com.flexibletimer.service
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -7,7 +9,9 @@ import android.os.Build
 import android.os.SystemClock
 import android.os.VibrationEffect
 import android.os.Vibrator
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import com.flexibletimer.R
 import com.flexibletimer.data.model.TimerEntry
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -27,6 +31,9 @@ class TimerAlarmReceiver : BroadcastReceiver() {
         const val EXTRA_SEGMENT_INDEX  = "segment_index"
         const val EXTRA_SLOT_INDEX     = "slot_index"
         const val EXTRA_END_TIMES      = "end_times"
+
+        private const val ALERT_CHANNEL_ID = "timer_alert_channel"
+        private const val ALERT_NOTIFICATION_ID = 2
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -48,6 +55,9 @@ class TimerAlarmReceiver : BroadcastReceiver() {
         val isLast = segmentIndex >= timers.lastIndex
         if (isLast) vibrateTriple(vibrator) else vibrateIntermediate(vibrator)
 
+        val label = timers[segmentIndex].label.ifBlank { "T${segmentIndex + 1}" }
+        sendTimerAlert(context, label)
+
         val serviceIntent = Intent(context, TimerService::class.java).apply {
             action = if (isLast) TimerService.ACTION_COMPLETE
                      else        TimerService.ACTION_ADVANCE_SEQUENTIAL
@@ -65,6 +75,13 @@ class TimerAlarmReceiver : BroadcastReceiver() {
         val endTimes  = intent.getLongArrayExtra(EXTRA_END_TIMES) ?: return
         val timersJson = intent.getStringExtra(EXTRA_TIMERS_JSON) ?: return
 
+        val timers: List<TimerEntry> = Gson().fromJson(
+            timersJson, object : TypeToken<List<TimerEntry>>() {}.type
+        )
+        val label = timers.getOrNull(slotIndex)?.label?.ifBlank { "T${slotIndex + 1}" }
+            ?: "T${slotIndex + 1}"
+        sendTimerAlert(context, label)
+
         val now = SystemClock.elapsedRealtime()
         val anyOtherRunning = endTimes.indices.any { i -> i != slotIndex && endTimes[i] > now }
 
@@ -77,9 +94,6 @@ class TimerAlarmReceiver : BroadcastReceiver() {
         } else {
             vibrateIntermediate(vibrator)
             // Restart the UI loop in case the service was killed while CPU slept
-            val timers: List<TimerEntry> = Gson().fromJson(
-                timersJson, object : TypeToken<List<TimerEntry>>() {}.type
-            )
             val serviceIntent = Intent(context, TimerService::class.java).apply {
                 action = TimerService.ACTION_RESUME_GROUP_UI
                 putStringArrayListExtra(TimerService.EXTRA_LABELS,
@@ -90,6 +104,27 @@ class TimerAlarmReceiver : BroadcastReceiver() {
             }
             ContextCompat.startForegroundService(context, serviceIntent)
         }
+    }
+
+    // ── Notifications ─────────────────────────────────────────────────────────
+
+    private fun sendTimerAlert(context: Context, label: String) {
+        val nm = context.getSystemService(NotificationManager::class.java) ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            nm.getNotificationChannel(ALERT_CHANNEL_ID) == null
+        ) {
+            nm.createNotificationChannel(
+                NotificationChannel(ALERT_CHANNEL_ID, "Timer Alerts", NotificationManager.IMPORTANCE_HIGH)
+            )
+        }
+        val notification = NotificationCompat.Builder(context, ALERT_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(label)
+            .setContentText("$label finished")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+        nm.notify(ALERT_NOTIFICATION_ID, notification)
     }
 
     // ── Vibration ─────────────────────────────────────────────────────────────
