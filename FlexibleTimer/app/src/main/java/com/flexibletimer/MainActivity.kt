@@ -18,23 +18,37 @@ import com.flexibletimer.ui.Screen
 import com.flexibletimer.ui.screens.*
 import com.flexibletimer.ui.theme.FlexibleTimerTheme
 import dagger.hilt.android.AndroidEntryPoint
+import android.Manifest
 import android.app.NotificationManager
 import android.app.NotificationChannel
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import com.flexibletimer.service.TimerAlarmReceiver.Companion.ALERT_CHANNEL_ID
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private val requestNotificationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val channel = NotificationChannel(
             ALERT_CHANNEL_ID,
-            "Alerts",
+            "Timer Alerts",
             NotificationManager.IMPORTANCE_HIGH
         )
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
 
         setContent {
             FlexibleTimerTheme {
