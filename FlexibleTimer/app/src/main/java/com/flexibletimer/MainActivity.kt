@@ -134,7 +134,10 @@ fun FlexibleTimerNavHost() {
             val state by vm.uiState.collectAsStateWithLifecycle()
             SequentialSavedScreen(
                 sequences = state.savedSequences,
-                onSelect = { seq -> vm.startSequential(seq.timers) },
+                onSelect = { seq ->
+                    SequentialViewModel.pendingLoad = seq.timers
+                    navController.navigate(Screen.SequentialNew.route)
+                },
                 onDelete = { seq -> vm.deleteSequence(seq) }
             )
         }
@@ -169,7 +172,10 @@ fun FlexibleTimerNavHost() {
             val state by vm.uiState.collectAsStateWithLifecycle()
             GroupSavedScreen(
                 groups = state.savedGroups,
-                onSelect = { group -> vm.startGroup(group.timers) },
+                onSelect = { group ->
+                    GroupViewModel.pendingLoad = group.timers
+                    navController.navigate(Screen.GroupNew.route)
+                },
                 onDelete = { group -> vm.deleteGroup(group) }
             )
         }

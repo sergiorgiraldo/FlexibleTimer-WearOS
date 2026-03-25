@@ -28,15 +28,25 @@ class SequentialViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
+    companion object {
+        /** Timers to pre-load when navigating to the edit screen from the saved list. */
+        var pendingLoad: List<TimerEntry>? = null
+    }
+
     private val _uiState = MutableStateFlow(SequentialUiState())
     val uiState: StateFlow<SequentialUiState> = _uiState.asStateFlow()
 
     init {
+        pendingLoad?.let { loadTimers(it); pendingLoad = null }
         viewModelScope.launch {
             repository.getSequences(TimerMode.SEQUENTIAL).collect { sequences ->
                 _uiState.update { it.copy(savedSequences = sequences) }
             }
         }
+    }
+
+    fun loadTimers(timers: List<TimerEntry>) {
+        _uiState.update { it.copy(timers = timers) }
     }
 
     fun setTimerCount(count: Int) {

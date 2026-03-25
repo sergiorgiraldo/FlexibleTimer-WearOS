@@ -131,11 +131,11 @@ class TimerAlarmReceiver : BroadcastReceiver() {
 
     // ── Vibration ─────────────────────────────────────────────────────────────
 
-    // 2 long loud pulses — intermediate (between sequential timers / group slot done)
+    // 3 long loud pulses — intermediate (between sequential timers / group slot done)
     private fun vibrateIntermediate(vibrator: Vibrator) {
-        val pattern = longArrayOf(0, 500, 150, 500)
+        val pattern = longArrayOf(0, 500, 150, 500, 150, 500)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createWaveform(pattern, intArrayOf(0, 255, 0, 255), -1))
+            vibrator.vibrate(VibrationEffect.createWaveform(pattern, intArrayOf(0, 255, 0, 255, 0, 255), -1))
         } else {
             @Suppress("DEPRECATION")
             vibrator.vibrate(pattern, -1)
