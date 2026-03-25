@@ -8,7 +8,7 @@ Sequential mode: you can setup several timers which will run in sequence. Use it
 
 Group mode: you can setup several timers which will run in parallel. Use it to track a set of dishes in your kitcken, to follow several colleagues doing exercises at the same time, etc
 
-* Sets can be saved for later reuse
+* Sets can be saved for later reuse and also edited
 
 ## Screenshots
 
